@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sadiq Space | منصة أستاذي</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
+
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+
+
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: #050505;
+            color: white;
+            scroll-behavior: smooth;
+        }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: 0.3s;
+            border-radius: 12px;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .input-clear {
+            background-color: white !important;
+            color: black !important;
+            border: 2px solid #3b82f6;
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            outline: none;
+            font-weight: bold;
+        }
+        
+        .teacher-card {
+            transition: 0.4s;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            position: relative;
+        }
+        
+        #registerModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #registerModal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #0f0f0f;
+            padding: 30px;
+            border-radius: 25px;
+            width: 95%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid #333;
+        }
+        
+        .support-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 90;
+            background: #25d366;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+            transition: 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+
+
+    <a href="#" id="adminSupportLink" target="_blank" class="support-btn text-xs md:text-sm">
+        <i class="fab fa-whatsapp text-lg"></i> الدعم الفني (صادق)     </a>
+
+
+    <nav class="fixed w-full z-50 px-6 py-4">
+
+        <div class="max-w-6xl mx-auto glass rounded-2xl p-4 flex justify-between items-center shadow-2xl">
+
+            <div class="text-xl font-bold italic text-white cursor-pointer" onclick="showAdminPanel()">Sadiq <span class="text-blue-500 text-sm">Space</span></div>
+
+            <div class="flex gap-2">
+                <button onclick="checkAndEdit()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs md:text-sm font-bold transition-all">تعديل بياناتي</button>                 <button onclick="openAddModal()" class="btn-primary px-4 py-2 text-xs md:text-sm font-bold">تسجيل مدرس</button>                            </div>
+        </div>
+    </nav>
+
+
+    <header class="pt-48 pb-10 px-6 text-center">
+
+        <h1 class="text-4xl md:text-7xl font-extrabold mb-6 tracking-tight">مدرسك.. <span class="gradient-text">صار بفرعكم</span></h1>
+
+        <p class="text-gray-400 max-w-2xl mx-auto mb-10 text-lg leading-relaxed">المنصة التعليمية الأولى للبحث عن المدرسين الأقرب لمنزلك.</p>
+    </header>
+
+
+    <section class="py-10 px-6 max-w-6xl mx-auto">
+
+        <div class="glass p-6 rounded-3xl border-2 border-blue-500/20 mb-10 shadow-2xl">
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2 mr-1">1. المحافظة</label>                     <select id="filterCity" class="input-clear" onchange="updateAreaOptions('filterArea', this.value); filterTeachers();">
+                        <option value="">كل العراق</option>
+                    </select>                 </div>
+
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2 mr-1">2. المنطقة</label>                     <select id="filterArea" class="input-clear" onchange="filterTeachers()">
+                        <option value="">كل المناطق</option>
+                    </select>                 </div>
+
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2 mr-1">3. المادة</label>                     <select id="filterSubject" class="input-clear" onchange="filterTeachers()">
+                        <option value="">كل المواد</option>
+                        <option value="رياضيات">رياضيات</option><option value="فيزياء">فيزياء</option>
+                        <option value="كيمياء">كيمياء</option><option value="أحياء">أحياء</option>
+                        <option value="لغة عربية">لغة عربية</option><option value="لغة إنجليزية">لغة إنجليزية</option>
+                    </select>                 </div>
+
+                <div>
+                    <label class="block text-xs text-gray-500 mb-2 mr-1">ابحث بالاسم</label>                     <input type="text" id="searchKeyword" class="input-clear" placeholder="اكتب الاسم هنا..." onkeyup="filterTeachers()">                 </div>
+            </div>
+        </div>
+
+
+        <div class="flex items-center gap-4 mb-8">
+
+            <h2 id="resultsHeader" class="text-2xl font-bold text-white">نخبة مدرسي العراق</h2>
+            <span id="teacherCount" class="bg-blue-600/20 text-blue-400 px-3 py-1 rounded-full text-sm font-bold border border-blue-500/20">0</span>
+            <div class="flex-1 h-[1px] bg-white/10"></div>
+        </div>
+
+
+        <div id="teachersList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+
+    <div id="registerModal">
+
+        <div class="modal-content text-right relative">
+
+            <div class="flex justify-between items-center mb-6">
+
+                <h2 id="modalTitle" class="text-xl font-bold text-blue-400">سجل كأستاذ في المنصة</h2>
+                <button onclick="toggleModal(false)" class="text-gray-400 text-2xl">✕</button>             </div>
+            <input type="hidden" id="editKey">
+            <div class="space-y-4">
+                <input type="text" id="tName" class="input-clear" placeholder="الاسم الكامل">                 <input type="text" id="tSubject" class="input-clear" placeholder="المادة الدراسية">                 <select id="tCity" class="input-clear" onchange="updateAreaOptions('tArea', this.value)">
+                    <option value="">اختر المحافظة</option>
+                </select>                 <select id="tArea" class="input-clear">
+                    <option value="">اختر المنطقة</option>
+                </select>                 <input type="tel" id="tPhone" class="input-clear" placeholder="رقم الواتساب (11 رقم)" maxlength="11" oninput="this.value = this.value.replace(/[^0-9]/g, '')">                 <input type="password" id="tPin" class="input-clear"
+                    placeholder="رمز PIN خاص بك">                 <textarea id="tPackage" class="input-clear" rows="3" placeholder="تفاصيل الدورة (الموقع، السعر، الأوقات)..."></textarea>                 <button id="publishBtn" onclick="saveTeacher()" class="btn-primary w-full py-3 font-bold">نشر المعلومات</button>                            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const myWhatsAppNumber = "9647725889250";    
+        document.getElementById('adminSupportLink').href = `https://api.whatsapp.com/send?phone=${myWhatsAppNumber}&text=مرحباً أستاذ صادق، أحتاج مساعدة.`;
+
+            
+        const areasData = {      
+            "بغداد": ["الكرادة", "المنصور", "الأعظمية", "الدورة", "بغداد الجديدة", "الشعب", "الكاظمية", "الحارثية", "السيدية", "زيونة"],
+                  "البصرة": ["الجبيلة", "القبلة", "العشار", "الزبير", "أبي الخصيب", "الأمن الداخلي", "الطويسة", "الحكيمية", "خمسة ميل", "المعقل", "الهارثه", "الدير"],
+                  "نينوى": ["الزهور", "المثنى", "الموصل القديمة", "حي الجامعي", "الجانب الأيسر", "الجانب الأيمن", "تلعفر"],
+                  "ميسان": ["العمارة - المركز", "حي الحسين", "قلعة صالح", "المجر الكبير"],
+                  "ذي قار": ["الناصرية - المركز", "الشطرة", "الرفاعي", "سوق الشيوخ", "حي أور"],
+                  "النجف": ["المدينة القديمة", "حي الأمير", "حي العدالة", "الكوفة", "المناذرة"],
+                  "كربلاء": ["مركز المدينة", "حي الحسين", "حي الموظفين", "الهندية", "عين التمر"],
+                  "بابل": ["الحلة - المركز", "القاسم", "المحاويل", "المسيب", "حي بابل"],
+                  "واسط": ["الكوت - المركز", "حي الكفاءات", "العزيزية", "الصويرة"],
+                  "الأنبار": ["الرمادي", "الفلوجة", "هيت", "القائم", "حي الأندلس"],
+                  "ديالى": ["بعقوبة - المركز", "المقدادية", "خان بني سعد", "بلدروز"],
+                  "كركوك": ["طريق بغداد", "حي الواسطي", "ليلان", "الحويجة"],
+                  "صلاح الدين": ["تكريت", "سامراء", "بلد", "الضلوعية"],
+                  "المثنى": ["السماوة - المركز", "الرميثة", "الخضر"],
+                  "القادسية": ["الديوانية - المركز", "عفك", "الشامية"],
+                  "أربيل": ["المركز", "عينكاوة", "سوران"],
+                  "السليمانية": ["المركز", "رانية", "دوكان"],
+                  "دهوك": ["المركز", "زاخو", "عمادية"]    
+        };
+
+            
+        const firebaseConfig = {      
+            apiKey: "AIzaSyB95_E_iuE-b4n2popl0clVJv06l7B4L-s",
+                  authDomain: "mycourseapp-4a90a.firebaseapp.com",
+                  projectId: "mycourseapp-4a90a",
+                  storageBucket: "mycourseapp-4a90a.firebasestorage.app",
+                  messagingSenderId: "1062211249999",
+                  appId: "1:1062211249999:web:fbbc22442939638b79c73a"    
+        };    
+        firebase.initializeApp(firebaseConfig);    
+        const db = firebase.database();    
+        let allTeachersRaw = {};
+
+            
+        function initDropdowns() {      
+            const cityFilters = [document.getElementById('filterCity'), document.getElementById('tCity')];      
+            cityFilters.forEach(select => {        
+                Object.keys(areasData).sort().forEach(city => {          
+                    let opt = new Option(city, city);          
+                    select.add(opt);        
+                });      
+            });    
+        }    
+        initDropdowns();
+
+            
+        function updateAreaOptions(targetId, city) {      
+            const areaSelect = document.getElementById(targetId);      
+            areaSelect.innerHTML = '<option value="">اختر المنطقة</option>';      
+            if (areasData[city]) {        
+                areasData[city].sort().forEach(area => {          
+                    let opt = new Option(area, area);          
+                    areaSelect.add(opt);        
+                });      
+            }
+
+                   // إضافة خيار مخصص إذا لم يجد منطقته
+                  
+            if (city !== "") {        
+                let otherOpt = new Option("أخرى (اكتب منطقتك يدوياً)", "other_custom");        
+                areaSelect.add(otherOpt);      
+            }
+
+                  
+            areaSelect.onchange = function() {        
+                if (this.value === "other_custom") {          
+                    let custom = prompt("يرجى كتابة اسم منطقتك:");          
+                    if (custom && custom.trim() !== "") {            
+                        let newOpt = new Option(custom, custom);            
+                        this.add(newOpt, this.options[this.length - 1]);            
+                        this.value = custom;          
+                    } else {            
+                        this.value = "";          
+                    }        
+                }        
+                if (targetId === 'filterArea') filterTeachers();      
+            };    
+        }
+
+            
+        db.ref('teachers').on('value', (s) => {      
+            allTeachersRaw = s.val() || {};      
+            filterTeachers();    
+        });
+
+            
+        function saveTeacher() {      
+            const key = document.getElementById('editKey').value;      
+            const data = {        
+                name: document.getElementById('tName').value.trim(),
+                        subject: document.getElementById('tSubject').value.trim(),
+                        city: document.getElementById('tCity').value,
+                        area: document.getElementById('tArea').value,
+                        phone: document.getElementById('tPhone').value.trim(),
+                        pin: document.getElementById('tPin').value.trim(),
+                        package: document.getElementById('tPackage').value.trim()      
+            };
+
+                  
+            if (!data.name || !data.subject || !data.city || !data.area || data.phone.length !== 11 || !data.pin || !data.package) {        
+                alert("يرجى التأكد من ملء جميع الحقول وأن رقم الهاتف 11 رقماً.");        
+                return;      
+            }
+
+                  
+            const ref = key ? db.ref('teachers/' + key) : db.ref('teachers').push();      
+            ref.set(data).then(() => {        
+                alert("تم الحفظ بنجاح!");        
+                toggleModal(false);      
+            });    
+        }
+
+            
+        function filterTeachers() {      
+            const city = document.getElementById('filterCity').value;      
+            const area = document.getElementById('filterArea').value;      
+            const sub = document.getElementById('filterSubject').value;      
+            const keyw = document.getElementById('searchKeyword').value.toLowerCase();
+
+                  
+            const arr = Object.entries(allTeachersRaw).map(([k, v]) => ({...v,
+                          id: k        
+            }))        .filter(t => (city === "" || t.city === city) && (area === "" || t.area === area) && (sub === "" || t.subject.includes(sub)) && (t.name.toLowerCase().includes(keyw)));
+
+                  
+            const header = document.getElementById('resultsHeader');      
+            const countBadge = document.getElementById('teacherCount');      
+            header.innerText = city ? `مدرسي ${city} ${area ? '- ' + area : ''}` : "نخبة مدرسي العراق";      
+            countBadge.innerText = arr.length;
+
+                  
+            displayTeachers(arr);    
+        }
+
+            
+        function displayTeachers(data) {      
+            const list = document.getElementById('teachersList');      
+            list.innerHTML = data.length ? '' : '<p class="col-span-full text-center text-gray-500 py-10">لا توجد نتائج بحث حالياً.</p>';      
+            data.reverse().forEach(t => {        
+                const p = t.phone.startsWith('0') ? '964' + t.phone.substring(1) : t.phone;        
+                list.innerHTML += `
+                    <div class="teacher-card text-right">
+                        <div class="mb-4 text-[10px] text-blue-400 font-bold">${t.city} • ${t.area}</div>
+                        <h3 class="font-bold text-xl mb-1">${t.name}</h3>
+                        <p class="text-blue-500 font-bold text-sm mb-4">${t.subject}</p>
+                        <div class="bg-white/5 p-4 rounded-xl text-xs text-gray-400 mb-6 min-h-[80px]">${t.package}</div>
+                        <div class="flex gap-2">
+                            <a href="https://api.whatsapp.com/send?phone=${p}" target="_blank" class="flex-1 text-center py-3 bg-green-600/20 text-green-400 rounded-xl text-sm font-bold">واتساب</a>
+                            <a href="tel:${t.phone}" class="w-12 flex items-center justify-center bg-blue-600/20 text-blue-400 rounded-xl"><i class="fas fa-phone"></i></a>
+                        </div>
+                    </div>`;      
+            });    
+        }
+
+            
+        function toggleModal(show) {      
+            document.getElementById('registerModal').classList.toggle('active', show);    
+        }
+
+            
+        function openAddModal() {      
+            document.getElementById('editKey').value = "";      
+            ['tName', 'tSubject', 'tPhone', 'tPin', 'tPackage', 'tCity', 'tArea'].forEach(f => document.getElementById(f).value = "");      
+            toggleModal(true);    
+        }
+
+            
+        function checkAndEdit() {      
+            const phone = prompt("أدخل رقم هاتفك:");      
+            const found = Object.entries(allTeachersRaw).find(([k, v]) => v.phone === phone);      
+            if (found && prompt("أدخل الرمز:") === found[1].pin) {        
+                const [key, data] = found;        
+                document.getElementById('editKey').value = key;        
+                document.getElementById('tName').value = data.name;        
+                document.getElementById('tSubject').value = data.subject;        
+                document.getElementById('tCity').value = data.city;        
+                updateAreaOptions('tArea', data.city);        
+                document.getElementById('tArea').value = data.area;        
+                document.getElementById('tPhone').value = data.phone;        
+                document.getElementById('tPin').value = data.pin;        
+                document.getElementById('tPackage').value = data.package;        
+                toggleModal(true);      
+            } else {        
+                alert("خطأ في البيانات.");      
+            }    
+        }
+
+            
+        function showAdminPanel() {      
+            if (prompt("رمز الإدارة:") === "2026") {        
+                let msg = "";        
+                Object.values(allTeachersRaw).forEach(t => msg += `${t.name}: ${t.pin}\n`);        
+                alert(msg);      
+            }    
+        }
+    </script>
+</body>
+
+</html>
+<!-- ضيفلي فقط زر الحذف اذا استاذ يحب يضيف معلوماته بعد نشره بدون تغيير ع الكود فقط اضافة حذف -->
